@@ -7,7 +7,7 @@ export class transactionData {
   @IsString()
   readonly from: string;
 
-  readonly value: number | string;
+  readonly value: string;
 
   gas: string | number;
 }

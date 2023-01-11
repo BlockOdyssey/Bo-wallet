@@ -19,7 +19,7 @@ export class AddressController {
     return await this.addressService.getTransactionReceipt(id);
   }
 
-  @Post()
+  @Post('tx')
   async sendTransaction(@Body() signedTransactioDetail: transactionData) {
     return this.addressService.sendTransaction(signedTransactioDetail);
   }
