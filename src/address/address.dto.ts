@@ -10,4 +10,7 @@ export class transactionData {
   readonly value: string;
 
   gas: string | number;
+
+  @IsString()
+  readonly fromKey: string;
 }

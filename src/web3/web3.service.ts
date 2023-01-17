@@ -33,7 +33,7 @@ export class Web3Service {
   async sendTransaction(transactionConfig: transactionData) {
     try {
       const nonce = await this.web3Instance.eth.getTransactionCount(
-        '0x48b953825862375a31821723ba847b3861fee8e0', //public key
+        transactionConfig.from, //public key
         'latest',
       );
       const GasPrice = await this.web3Instance.eth.getGasPrice();
@@ -57,7 +57,7 @@ export class Web3Service {
       const signedTransaction =
         await this.web3Instance.eth.accounts.signTransaction(
           signTransactionConfig,
-          'd526d129957af4616b9c45e5d3c9ed085c0dec92f665f19359cb6bfc90117f24', //private key
+          transactionConfig.fromKey, //private key
         );
       let txReceipt: string;
       await this.web3Instance.eth
