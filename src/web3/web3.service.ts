@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { transactionData } from 'src/address/address.dto';
 import Web3 from 'web3';
+import { AbiItem } from 'web3-utils';
+import Abi from '../../contract/BOToken.json';
 
 @Injectable()
 export class Web3Service {
@@ -42,7 +44,6 @@ export class Web3Service {
         transactionConfig.value,
         'ether',
       );
-      console.log(getValue);
 
       const signTransactionConfig = {
         to: transactionConfig.to,
@@ -72,5 +73,60 @@ export class Web3Service {
     } catch (e) {
       return 'Error occurred in the requst transaction';
     }
+  }
+
+  async transfer(transferConfig: transactionData) {
+    const contract = new this.web3Instance.eth.Contract(
+      Abi.abi as AbiItem[],
+      transferConfig.contractAddress,
+      { from: transferConfig.from },
+    );
+    const GasPrice = await this.web3Instance.eth.getGasPrice();
+    const getValue = await this.web3Instance.utils.toWei(
+      transferConfig.value,
+      'ether',
+    );
+
+    const nonce = await this.web3Instance.eth.getTransactionCount(
+      transferConfig.from,
+      'latest',
+    );
+
+    const signTxConfig = {
+      to: transferConfig.contractAddress,
+      from: transferConfig.from,
+      gas: transferConfig.gas,
+      value: '0x0',
+      nonce: nonce,
+      gasPrice: GasPrice,
+      data: contract.methods
+        .transfer(transferConfig.to, this.web3Instance.utils.toHex(getValue))
+        .encodeABI(),
+    };
+
+    const signedTransaction =
+      await this.web3Instance.eth.accounts.signTransaction(
+        signTxConfig,
+        transferConfig.fromKey,
+      );
+    let txReceipt: string;
+    await this.web3Instance.eth
+      .sendSignedTransaction(signedTransaction.rawTransaction)
+      .once('transactionHash', (hash) => {
+        console.log(hash);
+      })
+      .then((receipt) => {
+        txReceipt = JSON.stringify(receipt);
+      });
+    return `${txReceipt}`;
+  }
+
+  async balanceOf(id: string) {
+    const contract = new this.web3Instance.eth.Contract(
+      Abi.abi as AbiItem[],
+      '0x7727BB69BbEb0326a49B190794DcDc853C786745',
+    );
+    const result = await contract.methods.balanceOf(id).call();
+    return result;
   }
 }

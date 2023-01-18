@@ -13,4 +13,8 @@ export class transactionData {
 
   @IsString()
   readonly fromKey: string;
+
+  readonly contractAddress: string;
+
+  readonly nonce?: string | number;
 }
