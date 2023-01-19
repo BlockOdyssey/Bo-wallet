@@ -54,13 +54,13 @@ export class Web3Service {
         gasPrice: GasPrice,
         data: data,
       };
-
+      let txReceipt: string;
       const signedTransaction =
         await this.web3Instance.eth.accounts.signTransaction(
           signTransactionConfig,
           transactionConfig.fromKey, //private key
         );
-      let txReceipt: string;
+
       await this.web3Instance.eth
         .sendSignedTransaction(signedTransaction.rawTransaction)
         .once('transactionHash', (hash) => {
@@ -76,49 +76,53 @@ export class Web3Service {
   }
 
   async transfer(transferConfig: transactionData) {
-    const contract = new this.web3Instance.eth.Contract(
-      Abi.abi as AbiItem[],
-      transferConfig.contractAddress,
-      { from: transferConfig.from },
-    );
-    const GasPrice = await this.web3Instance.eth.getGasPrice();
-    const getValue = await this.web3Instance.utils.toWei(
-      transferConfig.value,
-      'ether',
-    );
-
-    const nonce = await this.web3Instance.eth.getTransactionCount(
-      transferConfig.from,
-      'latest',
-    );
-
-    const signTxConfig = {
-      to: transferConfig.contractAddress,
-      from: transferConfig.from,
-      gas: transferConfig.gas,
-      value: '0x0',
-      nonce: nonce,
-      gasPrice: GasPrice,
-      data: contract.methods
-        .transfer(transferConfig.to, this.web3Instance.utils.toHex(getValue))
-        .encodeABI(),
-    };
-
-    const signedTransaction =
-      await this.web3Instance.eth.accounts.signTransaction(
-        signTxConfig,
-        transferConfig.fromKey,
+    try {
+      const contract = new this.web3Instance.eth.Contract(
+        Abi.abi as AbiItem[],
+        transferConfig.contractAddress,
+        { from: transferConfig.from },
       );
-    let txReceipt: string;
-    await this.web3Instance.eth
-      .sendSignedTransaction(signedTransaction.rawTransaction)
-      .once('transactionHash', (hash) => {
-        console.log(hash);
-      })
-      .then((receipt) => {
-        txReceipt = JSON.stringify(receipt);
-      });
-    return `${txReceipt}`;
+      const GasPrice = await this.web3Instance.eth.getGasPrice();
+      const getValue = await this.web3Instance.utils.toWei(
+        transferConfig.value,
+        'ether',
+      );
+
+      const nonce = await this.web3Instance.eth.getTransactionCount(
+        transferConfig.from,
+        'latest',
+      );
+
+      const signTxConfig = {
+        to: transferConfig.contractAddress,
+        from: transferConfig.from,
+        gas: transferConfig.gas,
+        value: '0x0',
+        nonce: nonce,
+        gasPrice: GasPrice,
+        data: contract.methods
+          .transfer(transferConfig.to, this.web3Instance.utils.toHex(getValue))
+          .encodeABI(),
+      };
+
+      const signedTransaction =
+        await this.web3Instance.eth.accounts.signTransaction(
+          signTxConfig,
+          transferConfig.fromKey,
+        );
+      let txReceipt: string;
+      await this.web3Instance.eth
+        .sendSignedTransaction(signedTransaction.rawTransaction)
+        .once('transactionHash', (hash) => {
+          console.log(hash);
+        })
+        .then((receipt) => {
+          txReceipt = JSON.stringify(receipt);
+        });
+      return `${txReceipt}`;
+    } catch (e) {
+      return 'There is a problem with this request';
+    }
   }
 
   async balanceOf(id: string) {
