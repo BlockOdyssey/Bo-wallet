@@ -4,6 +4,7 @@ import { transactionData } from 'src/address/address.dto';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import Abi from '../../contract/BOToken.json';
+import { tokenData } from 'src/token/token.dto';
 
 @Injectable()
 export class Web3Service {
@@ -54,13 +55,13 @@ export class Web3Service {
         gasPrice: GasPrice,
         data: data,
       };
-      let txReceipt: string;
+
       const signedTransaction =
         await this.web3Instance.eth.accounts.signTransaction(
           signTransactionConfig,
           transactionConfig.fromKey, //private key
         );
-
+      let txReceipt: string;
       await this.web3Instance.eth
         .sendSignedTransaction(signedTransaction.rawTransaction)
         .once('transactionHash', (hash) => {
@@ -75,62 +76,58 @@ export class Web3Service {
     }
   }
 
-  async transfer(transferConfig: transactionData) {
-    try {
-      const contract = new this.web3Instance.eth.Contract(
-        Abi.abi as AbiItem[],
-        transferConfig.contractAddress,
-        { from: transferConfig.from },
-      );
-      const GasPrice = await this.web3Instance.eth.getGasPrice();
-      const getValue = await this.web3Instance.utils.toWei(
-        transferConfig.value,
-        'ether',
-      );
-
-      const nonce = await this.web3Instance.eth.getTransactionCount(
-        transferConfig.from,
-        'latest',
-      );
-
-      const signTxConfig = {
-        to: transferConfig.contractAddress,
-        from: transferConfig.from,
-        gas: transferConfig.gas,
-        value: '0x0',
-        nonce: nonce,
-        gasPrice: GasPrice,
-        data: contract.methods
-          .transfer(transferConfig.to, this.web3Instance.utils.toHex(getValue))
-          .encodeABI(),
-      };
-
-      const signedTransaction =
-        await this.web3Instance.eth.accounts.signTransaction(
-          signTxConfig,
-          transferConfig.fromKey,
-        );
-      let txReceipt: string;
-      await this.web3Instance.eth
-        .sendSignedTransaction(signedTransaction.rawTransaction)
-        .once('transactionHash', (hash) => {
-          console.log(hash);
-        })
-        .then((receipt) => {
-          txReceipt = JSON.stringify(receipt);
-        });
-      return `${txReceipt}`;
-    } catch (e) {
-      return 'There is a problem with this request';
-    }
-  }
-
-  async balanceOf(id: string) {
+  async transfer(transferConfig: tokenData) {
     const contract = new this.web3Instance.eth.Contract(
       Abi.abi as AbiItem[],
-      '0x7727BB69BbEb0326a49B190794DcDc853C786745',
+      transferConfig.contractAddress,
+      { from: transferConfig.from },
     );
-    const result = await contract.methods.balanceOf(id).call();
+    const GasPrice = await this.web3Instance.eth.getGasPrice();
+    const getValue = await this.web3Instance.utils.toWei(
+      transferConfig.value,
+      'ether',
+    );
+
+    const nonce = await this.web3Instance.eth.getTransactionCount(
+      transferConfig.from,
+      'latest',
+    );
+
+    const signTxConfig = {
+      to: transferConfig.contractAddress,
+      from: transferConfig.from,
+      gas: transferConfig.gas,
+      value: '0x0',
+      nonce: nonce,
+      gasPrice: GasPrice,
+      data: contract.methods
+        .transfer(transferConfig.to, this.web3Instance.utils.toHex(getValue))
+        .encodeABI(),
+    };
+
+    const signedTransaction =
+      await this.web3Instance.eth.accounts.signTransaction(
+        signTxConfig,
+        transferConfig.fromKey,
+      );
+    let txReceipt: string;
+    await this.web3Instance.eth
+      .sendSignedTransaction(signedTransaction.rawTransaction)
+      .once('transactionHash', (hash) => {
+        console.log(hash);
+      })
+      .then((receipt) => {
+        txReceipt = JSON.stringify(receipt);
+      });
+    return `${txReceipt}`;
+  }
+
+  async balanceOf(address: string, ca: string) {
+    const contract = new this.web3Instance.eth.Contract(
+      Abi.abi as AbiItem[],
+      ca,
+    );
+    const result = await contract.methods.balanceOf(address).call();
     return result;
   }
 }

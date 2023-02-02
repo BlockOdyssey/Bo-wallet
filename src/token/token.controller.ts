@@ -1,20 +1,22 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { TokenService } from './token.service';
 import { AddressValidationPipe } from 'src/address/address-validation.pipe';
-import { transactionData } from 'src/address/address.dto';
+import { tokenData } from './token.dto';
 
 @Controller('token')
 export class TokenController {
   constructor(private readonly tokenService: TokenService) {}
 
-  @Get(':id')
+  @Get('/:address/:ca')
   async balanceOf(
-    @Param('id', AddressValidationPipe) id: string,
+    @Param('address', AddressValidationPipe) address: string,
+    @Param('ca') ca: string,
   ): Promise<string> {
-    return await this.tokenService.balanceOf(id);
+    return await this.tokenService.balanceOf(address, ca);
   }
+
   @Post()
-  async transfer(@Body() transferconfig: transactionData) {
+  async transfer(@Body() transferconfig: tokenData) {
     return this.tokenService.transfer(transferconfig);
   }
 }

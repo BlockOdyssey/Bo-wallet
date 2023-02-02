@@ -1,6 +1,6 @@
 import { IsNumber, IsString } from 'class-validator';
 
-export class transactionData {
+export class tokenData {
   @IsString()
   readonly to: string;
 
@@ -15,6 +15,9 @@ export class transactionData {
 
   @IsString()
   readonly fromKey: string;
+
+  @IsString()
+  readonly contractAddress: string;
 
   readonly nonce?: string | number;
 }
